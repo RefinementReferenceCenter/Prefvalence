@@ -1,0 +1,229 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Preference Test</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="jspsych.js"></script>
+	<script src="plugins/jspsych-survey-multi-choice.js"></script>
+	<script src="plugins/jspsych-survey-text.js"></script>
+    <script src="plugins/jspsych-text.js"></script>
+    <script src="plugins/jspsych-xab.js"></script>
+	<script src="plugins/jspsych-categorize.js"></script>
+    <script src="plugins/jspsych-single-stim.js"></script>
+    <link href="css/jspsych.css" rel="stylesheet" type="text/css"></link>
+ <style>  #page {
+           width: 70%;
+           transform: translate( -50%, -50% );
+           position: absolute;
+           top: 40%;
+           left: 50%;
+           padding: 20px;
+           resize: both;
+           overflow: auto;
+           }
+</style>
+
+	<style> 
+		 #output {
+		  color:red;
+		  font-size: 190%;
+		  align-items: top;
+		  } 
+		 </style>
+  
+  </head>
+  <body>
+  <center>
+    <p id="output"></p>
+  <audio id="negsound" src="/audio/wrong_fail.mp3" preload="auto"></audio>
+  <audio id="possound" src="/audio/correct.mp3" preload="auto"></audio>
+  <div   id="page" >
+ </div>
+   <div>
+
+  </center>
+  <noscript>
+         Sorry...JavaScript is needed to go ahead.
+      </noscript>
+	  <div id="jspsych-target"></div>
+<script>
+ var langpos= true;
+ var language='e';
+ var valence='w';
+var id =jsPsych.randomization.randomID(8);
+ if(Math.floor( Math.random()*100)<50) {langpos=false}
+ var mycsvtxtVD ="\r\n";
+ var mycsvheaderVD ="\r\nid;language;Music;age;sex;handedness;vision;";
+ var mycsvtxt ="\r\n";
+ var mycsvheader ="\r\nid;language;Music;langpos;age;sex;handedness;vision;trainingtrialsN;correctN;score;LOT1;LOT2;LOT3;LOT4;LOT5;LOT6;LOT7;LOT8;LOT9;LOT10;";
+ mycsvheader = mycsvheader +"negGO;nearnegGO;midnegGO;ambnegGO;ambGO;ambpodGO;midposGO;nearposGO;posGO;";
+ mycsvheader = mycsvheader +"negS;nearnegS;midnegS;ambnegS;ambS;ambpodS;midposS;nearposS;posS;";
+
+  
+    /* error event handling and message display */
+  window.onerror = function (msg, url, line) {
+    alert("Message : " + msg + "on line: " + line);
+  }
+  
+//Speicherfunktion
+  function saveData(filename, filedata){
+   $.ajax({
+      type:'post',
+      cache: false,
+      url: 'savedata.php',
+      data: {filename: filename, filedata: filedata}
+   });
+}
+
+ //Veronikas Test
+  
+var  myimages = ['images/Food_4.jpg', 
+  				  'images/Grass_1.jpg',
+                  'images/House_1.jpg', 
+				  'images/Monkey_2.jpg', 
+				  'images/Sunset_1.jpg', 
+ 				  'images/Timber_1.jpg',
+				  'images/Flowers_3.jpg']; 
+	
+
+ 
+  
+ 
+ 
+
+
+  
+  var instructions_VD={
+  type: "text",
+   text: function(){
+
+
+  
+	
+	
+   return "" +
+		"<p> We will present you two pictures at the same time.<p/>"+ 
+        "<p>By using the arrow keys you can choose a picture, that evokes a more positive feeling or rather a less negative feeling</p>"+
+		"<p>Press the <b>right</b> arrow key for choosing the <b>right</b> picture and the <b>left</b> arrow key for choosing the <b>left</b> picture.</p>"+
+		"<p> There are no right or wrong answers. We are interested in your individual opinion.</p>"+
+		"<p>Please do not take too long over any picture. Your first response is as good as any.</p>"+
+		'<hr size="6" width="80%" color="teal" >'+
+		'<p style=" color:#990000;">Press any key to continue.</p>'}
+  };
+ 
+				  
+  var numelements=myimages.length // Number of images in the vector
+  var i=0;
+  
+  var score=[];
+  for (i=0; i<numelements; i++){
+   score[i]={stim: myimages[i], score: 0}; 
+  }
+  
+  var j=0;
+  var count=0;
+  
+  var alltrials=[];
+  //Do all possible combinations
+  for (i=0; i<numelements; i++){
+  for (j=i+1; j<numelements; j++){
+   if (myimages[i] !=myimages[j]) {
+     alltrials[count]={stimuli:[myimages[i], myimages[j]]};
+	 count++;
+    }
+   }
+  }
+ //Shuffle
+  mycombi =jsPsych.randomization.shuffleNoRepeats(alltrials);
+  
+    var chooseimages = 
+  {
+    type: 'xab',
+    timeline: alltrials,
+	randomize_order: true,
+    left_key: 37,
+	right_key: 39,
+	timing_x: 10,
+	timing_xab_gap: 10,
+	on_finish: function(data){
+	var winnerimg
+	 if(data.correct==true)
+	 {
+	  winnerimg=data.stimulus.split(",")[1];
+	  winnerimg=winnerimg.split('"')[1]
+	 }
+	 else
+	 {
+	  winnerimg=data.stimulus.split(",")[2]
+	  winnerimg=winnerimg.split('"')[1]
+     }
+	  //alert(winnerimg + " " +myimages[1] );
+	 for (i=0; i<numelements; i++)
+	 {
+	  if(winnerimg==myimages[i]) 
+	  {
+	   score[i].score ++;
+	   //console.log(JSON.stringify(score[i]));
+	  }
+	 }
+    }
+   };
+   
+   
+   /* define debrief block */
+  var debrief_block = {
+   type: "text",
+   text: function(){
+    var abc = jsPsych.data.getDataByTrialIndex(0);
+	var end = jsPsych.data.getLastTrialData(); //LL
+  if (abc.language=='d'){return "<p> Vielen Dank f\u00fcr Deine Teilnahme an unserer Studie!</p>" +
+	  '<hr size="6" width="80%" color="teal" >'+
+	  '<p style=" color:#990000;">Dr\u00fccke eine Taste um das Experiment zu beenden.</p>'}
+  if (abc.language=='e'){return "<p> Thank you for participating!</p>" +
+	  '<hr size="6" width="80%" color="teal" >'+
+	  '<p style=" color:#990000;">Press any key to end the experiment.</p>'}},
+	  	  data: function()  { 
+	  var obj ='{ '; 
+	  for (i=0; i<numelements; i++){
+	  obj =  obj + '"' +myimages[i] + '"' + ':'+ score[i].score;
+	  if(i<numelements-1) obj =  obj +', '
+	  };
+	  obj=obj+'}';
+	  obj=JSON.parse(obj);
+	  return obj;  
+	  },
+      on_finish: function(){
+	  
+      for (i=0; i<numelements; i++){
+	   mycsvtxtVD=mycsvtxtVD + score[i].score + ";";
+	   mycsvheaderVD=mycsvheaderVD + myimages[i] + ";"; //should stay the same once the pictures are selected
+	  }
+	  }
+	  
+  };
+   
+  //TIMELINE
+ var timeline = []; 
+ timeline.push(instructions_VD);
+ timeline.push(chooseimages);
+ timeline.push(debrief_block);
+
+ jsPsych.init({
+   display_element: $('#page'),
+   timeline: timeline,
+	// show_progress_bar: true,
+   fullscreen: true,  
+   on_trial_start: function(){
+    var date=Date();
+    document.getElementById("output").innerHTML="",
+    jsPsych.data.addProperties({date: date});},
+    on_finish: function() {
+     saveData("alldata_paper.csv", jsPsych.data.dataAsCSV()),
+     
+saveData("prefdata_paper.csv",mycsvtxtVD); //Just the numbers
+	  saveData("prefheader-paper.csv",mycsvheaderVD);	 //Header (should stay the same once the pictures are selected)
+     //jsPsych.data.displayData()
+	 } 
+   });
+</script>
+</html>
